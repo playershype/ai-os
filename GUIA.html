@@ -99,7 +99,23 @@ table{border-collapse:collapse;width:100%;font-size:16px} td,th{border-top:1px s
 <li><b>Contact information:</b> tu correo → <b>Next</b> → marca <b>I agree</b> → <b>Continue</b> → <b>Create</b>.</li>
 <li>Abre <a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener">Audience</a> → en <b>Test users</b> clic en <b>+ Add users</b> → escribe <b>tu propio Gmail</b> → <b>Save</b>.</li>
 </ol>
-<h3>4d. Crear la llave (Client ID)</h3>
+<h3>4d. Declarar los permisos (Data Access)</h3>
+<ol>
+<li>Abre <a href="https://console.cloud.google.com/auth/scopes" target="_blank" rel="noopener">Data Access</a>.</li>
+<li>Clic en <b>Add or remove scopes</b>. Confirma que estén declarados estos cuatro permisos; si falta alguno, añádelo manualmente:</li>
+</ol>
+<ul>
+<li><code>https://www.googleapis.com/auth/gmail.readonly</code></li>
+<li><code>https://www.googleapis.com/auth/calendar.readonly</code></li>
+<li><code>https://www.googleapis.com/auth/drive.metadata.readonly</code></li>
+<li><code>https://www.googleapis.com/auth/tasks.readonly</code></li>
+</ul>
+<ol start="3">
+<li>Clic en <b>Update</b>. Para esta prueba personal, deja la aplicación en <b>Testing</b> y mantén tu Gmail en <b>Test users</b>.</li>
+</ol>
+<div class="box warn"><b>Importante para esta prueba:</b> <code>gmail.readonly</code> y <code>drive.metadata.readonly</code> están clasificados por Google como permisos restringidos. Es normal ver el aviso de app no verificada mientras pruebas con tu propia cuenta. En modo <b>Testing</b>, la autorización del test user expira después de 7 días; si ocurre, vuelve a autorizar. No publiques la app para otros usuarios todavía.</div>
+
+<h3>4e. Crear la llave (Client ID)</h3>
 <ol>
 <li>Abre <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener">Clients</a> → <b>+ Create client</b>.</li>
 <li><b>Application type:</b> <b>Web application</b>. Nombre: <code>AI OS web</code>.</li>
@@ -158,7 +174,7 @@ table{border-collapse:collapse;width:100%;font-size:16px} td,th{border-top:1px s
 <tr><th>Problema</th><th>Solución</th></tr>
 <tr><td>El enlace de GitHub muestra “404”</td><td>Espera 2 minutos tras activar Pages. Revisa que <code>index.html</code> esté en la raíz del repositorio (paso 2).</td></tr>
 <tr><td>Página en blanco</td><td>Falta la carpeta <code>js</code>. Súbela: <b>Add file → Upload files</b> → arrastra la carpeta <code>js</code> → <b>Commit changes</b>.</td></tr>
-<tr><td>Google: <i>Error 400: redirect_uri_mismatch</i></td><td>En el paso 4d, la dirección debe ser exactamente <code>https://TU-USUARIO.github.io/ai-os/</code> (con barra final) y el origen <code>https://TU-USUARIO.github.io</code> (sin barra). Corrige, guarda, espera 5 minutos.</td></tr>
+<tr><td>Google: <i>Error 400: redirect_uri_mismatch</i></td><td>En el paso 4e, la dirección debe ser exactamente <code>https://TU-USUARIO.github.io/ai-os/</code> (con barra final) y el origen <code>https://TU-USUARIO.github.io</code> (sin barra). Corrige, guarda, espera 5 minutos.</td></tr>
 <tr><td>Google: <i>Error 403: access_denied</i></td><td>Agrega tu Gmail como <b>Test user</b> (paso 4c, punto 5).</td></tr>
 <tr><td>“This Google API is not enabled”</td><td>Activa esa API (paso 4b), espera un minuto y toca <b>Refresh now</b>.</td></tr>
 <tr><td>Faltan permisos</td><td>Settings → <b>Reconnect and tick every box</b>.</td></tr>
