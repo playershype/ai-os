@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de instalación — AI Operating System</title>
+<style>
+:root{--bg:#0A0D14;--s1:#111622;--s2:#182030;--bd:rgba(255,255,255,.09);--tx:#E2E8F0;--mu:#A3B1C4;--pri:#38BDF8;--warn:#FBBF24;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#F4F6F9;--s1:#FFFFFF;--s2:#F1F4F8;--bd:rgba(15,23,42,.10);--tx:#0B1220;--mu:#475569;--pri:#0369A1;--warn:#B45309;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif}
+main{max-width:820px;margin:0 auto;padding:40px 18px 80px}
+h1{font-size:32px;line-height:1.2;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-size:22px;margin:44px 0 8px;display:flex;gap:12px;align-items:center}
+h2 .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--pri);color:var(--bg);font-size:16px;align-items:center;justify-content:center;flex:0 0 auto}
+h3{font-size:18px;margin:24px 0 6px}
+.mu{color:var(--mu)} a{color:var(--pri)}
+ol,ul{padding-left:24px} li{margin:7px 0}
+code{font:15px ui-monospace,Consolas,monospace;background:var(--s2);border:1px solid var(--bd);padding:2px 6px;border-radius:4px;word-break:break-all}
+.box{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;margin:16px 0}
+.tip{border-color:var(--pri)} .warn{border-color:var(--warn)}
+.tag{display:inline-block;font:600 11px ui-monospace,monospace;letter-spacing:.05em;padding:2px 8px;border-radius:999px;background:var(--s2);color:var(--mu);text-transform:uppercase}
+table{border-collapse:collapse;width:100%;font-size:16px} td,th{border-top:1px solid var(--bd);padding:10px 8px;text-align:left;vertical-align:top}
+.toc a{display:block;padding:3px 0}
+</style>
+</head>
+<body><main>
+<span class="tag">Guía · unos 25 minutos, una sola vez · todo gratis</span>
+<h1>AI Operating System para tu celular</h1>
+<p class="mu">Tu centro de mando diario. Lee tu Gmail, Google Calendar, Google Drive y Google Tasks y te muestra en una sola pantalla qué importa hoy, qué cambió, qué te deben y qué hacer después. Se aloja <b>gratis en GitHub Pages</b> y se usa desde el navegador del celular. <b>No hay que instalar nada.</b></p>
+
+<div class="box tip"><b>Consejo:</b> haz los pasos 1 a 4 en una <b>computadora</b> (es mucho más fácil subir archivos y configurar Google ahí). Después, todo lo demás se hace en el celular.</div>
+
+<div class="box toc"><b>Pasos</b>
+<a href="#github">1. Crear tu cuenta de GitHub</a>
+<a href="#subir">2. Subir la app a GitHub</a>
+<a href="#pages">3. Publicarla con GitHub Pages</a>
+<a href="#google">4. Crear tu “llave” de Google</a>
+<a href="#celular">5. Abrirla en el celular y conectar Google</a>
+<a href="#inicio">6. Ponerla en la pantalla de inicio</a>
+<a href="#ia">7. Activar la IA (opcional, tiene costo)</a>
+<a href="#uso">Cómo funciona cada día</a>
+<a href="#problemas">Solución de problemas</a>
+<a href="#privacidad">Privacidad</a>
+</div>
+
+<h2 id="github"><span class="n">1</span>Crear tu cuenta de GitHub</h2>
+<ol>
+<li>Entra a <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>.</li>
+<li>Escribe tu correo, una contraseña y un <b>nombre de usuario</b> (anótalo — por ejemplo <code>chief-ops</code>). Tu app quedará en <code>https://TU-USUARIO.github.io/ai-os/</code>.</li>
+<li>Confirma el código que llega a tu correo. Si te pregunta por un plan, elige <b>Free</b> (gratis).</li>
+</ol>
+
+<h2 id="subir"><span class="n">2</span>Subir la app a GitHub</h2>
+<ol>
+<li>Descomprime el archivo <code>ai-os-web.zip</code> (Windows: clic derecho → <b>Extraer todo…</b> → <b>Extraer</b>). Se crea una carpeta <b>ai-os-web</b>.</li>
+<li>Entra a <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a>.</li>
+<li><b>Repository name:</b> <code>ai-os</code> (exactamente así, en minúsculas).</li>
+<li>Marca <b>Public</b> (necesario para que GitHub Pages sea gratis — solo el código es público, <b>tus datos nunca se suben</b>).</li>
+<li>No marques nada más. Clic en <b>Create repository</b>.</li>
+<li>En la página que aparece, haz clic en el enlace <b>uploading an existing file</b> (o en <b>Add file → Upload files</b>).</li>
+<li>Abre la carpeta <b>ai-os-web</b> en tu computadora, selecciona <b>todo lo que hay adentro</b> (<code>Ctrl</code>+<code>A</code> en Windows, <code>Cmd</code>+<code>A</code> en Mac) y <b>arrástralo</b> a la página de GitHub. Usa Chrome o Edge para que se suba también la carpeta <code>js</code>.</li>
+<li>Espera a que termine la lista de archivos. Revisa que aparezcan <code>index.html</code>, <code>app.js</code> y la carpeta <code>js</code>.</li>
+<li>Abajo, clic en el botón verde <b>Commit changes</b>.</li>
+</ol>
+<div class="box warn"><b>Importante:</b> <code>index.html</code> debe quedar en la “raíz” del repositorio (en la primera página), no dentro de otra carpeta. Si ves una carpeta <code>ai-os-web</code> en GitHub, borra el repositorio y vuelve a subir solo <b>lo que hay dentro</b> de ella.</div>
+
+<h2 id="pages"><span class="n">3</span>Publicarla con GitHub Pages</h2>
+<ol>
+<li>En tu repositorio <code>ai-os</code>, clic en <b>Settings</b> (arriba, a la derecha).</li>
+<li>En el menú de la izquierda, clic en <b>Pages</b>.</li>
+<li>En <b>Build and deployment → Source</b>, elige <b>Deploy from a branch</b>.</li>
+<li>En <b>Branch</b>, elige <b>main</b> y la carpeta <b>/ (root)</b>. Clic en <b>Save</b>.</li>
+<li>Espera 1–2 minutos y recarga la página. Arriba aparecerá: <i>“Your site is live at <code>https://TU-USUARIO.github.io/ai-os/</code>”</i>.</li>
+<li>Abre ese enlace. Debes ver la pantalla <b>Welcome to your AI Operating System</b>. Puedes tocar <b>Load demo data</b> para probarla con datos de ejemplo (marcados como DEMO y ficticios).</li>
+</ol>
+
+<h2 id="google"><span class="n">4</span>Crear tu “llave” de Google <span class="tag">gratis</span></h2>
+<p class="mu">Google exige que cada app que lee Gmail tenga su propia llave (un “Client ID”). Como la app es tuya, la creas tú. No necesitas tarjeta.</p>
+<h3>4a. Proyecto</h3>
+<ol>
+<li>Entra a <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">console.cloud.google.com/projectcreate</a> con la cuenta de Google que quieres conectar.</li>
+<li>Acepta los términos si te los pide. <b>Project name:</b> <code>AI OS</code> → <b>Create</b>. Espera unos segundos.</li>
+<li>Arriba, en el selector de proyecto, verifica que diga <b>AI OS</b>.</li>
+</ol>
+<h3>4b. Activar las 4 APIs</h3>
+<p>Abre cada enlace, verifica que arriba diga <b>AI OS</b> y pulsa el botón azul <b>Enable</b> (Habilitar):</p>
+<ul>
+<li><a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener">Gmail API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener">Google Calendar API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener">Google Drive API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/tasks.googleapis.com" target="_blank" rel="noopener">Google Tasks API</a></li>
+</ul>
+<h3>4c. Pantalla de inicio de sesión</h3>
+<ol>
+<li>Abre <a href="https://console.cloud.google.com/auth/overview" target="_blank" rel="noopener">Google Auth Platform</a> → <b>Get started</b>.</li>
+<li><b>App name:</b> <code>AI OS</code> · <b>User support email:</b> tu correo → <b>Next</b>.</li>
+<li><b>Audience:</b> <b>External</b> → <b>Next</b>.</li>
+<li><b>Contact information:</b> tu correo → <b>Next</b> → marca <b>I agree</b> → <b>Continue</b> → <b>Create</b>.</li>
+<li>Abre <a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener">Audience</a> → en <b>Test users</b> clic en <b>+ Add users</b> → escribe <b>tu propio Gmail</b> → <b>Save</b>.</li>
+</ol>
+<h3>4d. Crear la llave (Client ID)</h3>
+<ol>
+<li>Abre <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener">Clients</a> → <b>+ Create client</b>.</li>
+<li><b>Application type:</b> <b>Web application</b>. Nombre: <code>AI OS web</code>.</li>
+<li>En <b>Authorized JavaScript origins</b> → <b>+ Add URI</b> → escribe (con tu usuario, sin barra al final):<br><code>https://TU-USUARIO.github.io</code></li>
+<li>En <b>Authorized redirect URIs</b> → <b>+ Add URI</b> → escribe (con barra al final):<br><code>https://TU-USUARIO.github.io/ai-os/</code></li>
+<li>Clic en <b>Create</b>. Copia el <b>Client ID</b> (termina en <code>.apps.googleusercontent.com</code>). Puedes enviártelo por correo o WhatsApp a ti mismo para pegarlo en el celular. <b>No necesitas el “Client secret”.</b></li>
+</ol>
+<div class="box tip">La app también te muestra estas dos direcciones exactas, con botón <b>Copy</b>, en <b>Settings → Google account</b>.</div>
+
+<h2 id="celular"><span class="n">5</span>Abrirla en el celular y conectar Google</h2>
+<ol>
+<li>En el celular, abre <code>https://TU-USUARIO.github.io/ai-os/</code> en <b>Safari</b> (iPhone) o <b>Chrome</b> (Android).</li>
+<li>Si cargaste datos de demo, no pasa nada: se borran solos al conectar Google.</li>
+<li>En el paso 1 (o en <b>Settings</b>), pega tu <b>Client ID</b> → <b>Save</b>.</li>
+<li>Toca <b>Connect Google</b> y elige tu cuenta.</li>
+<li>Google dirá <i>“Google no ha verificado esta app”</i>. Es normal: es tu propia app privada. Toca <b>Continuar</b>.</li>
+<li>En la pantalla de permisos, <b>marca todas las casillas</b> → <b>Continuar</b>.</li>
+<li>Vuelves a la app y empieza a sincronizar. Sigue los pasos: tu nombre y hora del resumen, algunas reglas de prioridad, y <b>Generate my first brief</b>.</li>
+</ol>
+
+<h2 id="inicio"><span class="n">6</span>Ponerla en la pantalla de inicio</h2>
+<ul>
+<li><b>iPhone (Safari):</b> toca el botón <b>Compartir</b> (cuadrado con flecha hacia arriba) → <b>Agregar a pantalla de inicio</b> → <b>Agregar</b>.</li>
+<li><b>Android (Chrome):</b> toca <b>⋮</b> (arriba a la derecha) → <b>Agregar a la pantalla principal</b> → <b>Agregar</b>.</li>
+</ul>
+<p>Ahora tienes el ícono <b>AI OS</b> como cualquier otra app.</p>
+
+<h2 id="ia"><span class="n">7</span>Activar la IA <span class="tag">opcional · tiene costo</span></h2>
+<p>Sin IA la app ya funciona con reglas: detecta fechas límite, choques de agenda, correos que esperan respuesta, promesas simples (“te lo envío el viernes”), estado de proyectos y cambios desde ayer. Con IA, además:</p>
+<ul><li>escribe un resumen interpretado, marcando cada línea como <b>FACT</b> (hecho), <b>INFERENCE</b> (deducción) o <b>RECOMMENDATION</b> (recomendación);</li><li>clasifica mejor el correo y encuentra compromisos y decisiones (siempre verificados contra las palabras exactas del correo);</li><li>prepara reuniones, redacta respuestas y contesta cualquier pregunta en <b>Chief of Staff</b>.</li></ul>
+<ol>
+<li>Entra a <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com/settings/keys</a> y crea una cuenta.</li>
+<li>En <b>Billing</b>, carga un poco de saldo. Se cobra por uso; revisa los precios actuales en la misma página.</li>
+<li>Clic en <b>Create key</b>, cópiala y pégala en la app: <b>Settings → AI → Save &amp; test</b>.</li>
+</ol>
+
+<h2 id="uso">Cómo funciona cada día</h2>
+<ul>
+<li><b>Abre la app por la mañana.</b> La primera vez que la abras después de tu hora (por defecto 6:00 AM), sincroniza, compara con ayer y genera tu resumen en unos segundos.</li>
+<li>La sesión de Google dura cerca de <b>1 hora</b>. Si pasó más tiempo, al abrir la app verás un salto rápido a Google y de vuelta (normalmente sin escribir nada). Puedes desactivarlo en Settings y usar el botón <b>Refresh Google</b>.</li>
+<li>Mientras la app está abierta, revisa novedades cada 15 minutos.</li>
+<li><b>Limitación honesta:</b> un celular no deja que una página web trabaje en segundo plano, así que no puede avisarte a las 6 AM si no la abres. Tu último resumen siempre queda guardado y se ve aunque no tengas señal.</li>
+<li>Si también quieres usarla en la computadora, ábrela ahí y conecta Google de nuevo (cada dispositivo guarda sus propios datos).</li>
+</ul>
+<table>
+<tr><th>Pantalla</th><th>Para qué sirve</th></tr>
+<tr><td><b>Today</b></td><td>Resumen, prioridades (con “Why am I seeing this?”), agenda con choques y “Prep me”, correo clasificado, compromisos (I owe / They owe), tareas, riesgos, proyectos, qué cambió, próximos días y el Chief of Staff.</td></tr>
+<tr><td><b>Focus</b></td><td>Una sola tarea, el tiempo que tienes, pasos, archivos y correos relacionados. Lo demás espera.</td></tr>
+<tr><td><b>Weekly review</b></td><td>Lo hecho, lo que se atrasó, compromisos vencidos, avance de proyectos, decisiones y la próxima semana.</td></tr>
+<tr><td><b>Settings</b></td><td>Hora del resumen, reglas de prioridad, proyectos, personas importantes, estado de las conexiones, permisos.</td></tr>
+</table>
+<div class="box tip"><b>Consejo:</b> en <b>Settings → Projects</b> crea 3–5 proyectos con algunas palabras clave (nombres de clientes o productos, por ejemplo <code>acme, renovación, lanzamiento</code>). Así la app une el correo, la reunión, la tarea y el documento que van juntos.</div>
+
+<h2 id="problemas">Solución de problemas</h2>
+<table>
+<tr><th>Problema</th><th>Solución</th></tr>
+<tr><td>El enlace de GitHub muestra “404”</td><td>Espera 2 minutos tras activar Pages. Revisa que <code>index.html</code> esté en la raíz del repositorio (paso 2).</td></tr>
+<tr><td>Página en blanco</td><td>Falta la carpeta <code>js</code>. Súbela: <b>Add file → Upload files</b> → arrastra la carpeta <code>js</code> → <b>Commit changes</b>.</td></tr>
+<tr><td>Google: <i>Error 400: redirect_uri_mismatch</i></td><td>En el paso 4d, la dirección debe ser exactamente <code>https://TU-USUARIO.github.io/ai-os/</code> (con barra final) y el origen <code>https://TU-USUARIO.github.io</code> (sin barra). Corrige, guarda, espera 5 minutos.</td></tr>
+<tr><td>Google: <i>Error 403: access_denied</i></td><td>Agrega tu Gmail como <b>Test user</b> (paso 4c, punto 5).</td></tr>
+<tr><td>“This Google API is not enabled”</td><td>Activa esa API (paso 4b), espera un minuto y toca <b>Refresh now</b>.</td></tr>
+<tr><td>Faltan permisos</td><td>Settings → <b>Reconnect and tick every box</b>.</td></tr>
+<tr><td>“Key not accepted” en IA</td><td>Revisa que copiaste la clave completa y que tu cuenta de Anthropic tiene saldo.</td></tr>
+<tr><td>Actualizar la app a una versión nueva</td><td>En tu repositorio: <b>Add file → Upload files</b> → arrastra los archivos nuevos → <b>Commit changes</b>. Tus datos no se pierden.</td></tr>
+</table>
+
+<h2 id="privacidad">Privacidad</h2>
+<ul>
+<li>En GitHub solo está el <b>código</b> de la app. <b>Tus correos, agenda y llaves nunca se suben a GitHub</b>: se guardan solo en el navegador de tu celular.</li>
+<li>Tus datos viajan directamente de tu celular a Google (y a Anthropic si activas la IA). No pasan por ningún otro servidor.</li>
+<li>El acceso a Google es de <b>solo lectura</b>: la app no puede enviar, cambiar ni borrar correos, eventos, archivos ni tareas de Google. Las respuestas se redactan para que tú las copies y envíes desde Gmail.</li>
+<li>No publiques páginas de otras personas en tu misma cuenta de GitHub Pages (comparten el mismo espacio del navegador).</li>
+<li>Puedes quitar el acceso cuando quieras en <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>.</li>
+</ul>
+</main></body></html>
