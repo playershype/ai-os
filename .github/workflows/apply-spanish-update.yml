@@ -21,9 +21,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar -xzf .payload/large3.tgz
+          cat .payload/bin00 .payload/bin01 .payload/bin02 .payload/c00 .payload/c01 .payload/c02 .payload/c03 .payload/c04 .payload/c05 .payload/c06 .payload/c07 .payload/c08 .payload/c09 > /tmp/large3.tgz
+          echo "4cf0fd11155eaea1833648c2dc09008db50b8dfaf7171ffdc868cc956f99591c  /tmp/large3.tgz" | sha256sum -c -
+          tar -xzf /tmp/large3.tgz
           rm -rf .payload
           rm -f .github/workflows/apply-spanish-update.yml
+          node --check app.js
+          for f in js/*.js sw.js; do node --check "$f"; done
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
