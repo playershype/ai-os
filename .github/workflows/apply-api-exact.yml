@@ -1,0 +1,36 @@
+name: Apply exact API module
+
+on:
+  push:
+    branches:
+      - spanish-branding-v1.2
+
+permissions:
+  contents: write
+
+jobs:
+  apply-api:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: spanish-branding-v1.2
+          fetch-depth: 0
+      - name: Restore exact API module
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .payload-api/p00 .payload-api/p01 .payload-api/p02 > /tmp/api_exact.tgz
+          echo "68e233a4c52bf372a4e54c8219a2061233a4d897754149d11366467cd869cbd1  /tmp/api_exact.tgz" | sha256sum -c -
+          tar -xzf /tmp/api_exact.tgz
+          test "$(git hash-object js/api.js)" = "e4df2b93eebb44334380aa44689520e278bc606e"
+          rm -rf .payload-api
+          rm -f .github/workflows/apply-api-exact.yml
+          node --check js/api.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Restore exact audited API module"
+          git push origin HEAD:spanish-branding-v1.2
