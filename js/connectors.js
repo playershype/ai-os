@@ -4,6 +4,7 @@ import * as G from './google.js';
 import { db, config } from './store.js';
 import { DAY, startOfDay, addDays } from './dates.js';
 import { demoData } from './demo.js';
+import { L } from './i18n.js';
 
 // ---------- helpers ----------
 const ENT = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ' };
@@ -122,7 +123,7 @@ export async function syncGoogle({ full }) {
     }
     return n;
   });
-  res.gcal = await syncSource('gcal', 'Google Calendar', async () => {
+  res.gcal = await syncSource('gcal', L('Google Calendar', 'Google Calendar'), async () => {
     const items = await G.calendarEvents(addDays(startOfDay(now), -30), addDays(startOfDay(now), 22));
     for (const id of Object.keys(db.events)) if (db.events[id].source === 'gcal') delete db.events[id];
     let n = 0;
@@ -167,7 +168,7 @@ export async function syncDemo() {
     gmail: { label: 'Gmail (demo)', status: 'ok', lastSuccess: at, lastAttempt: at, records: d.messages.length },
     gcal: { label: 'Google Calendar (demo)', status: 'ok', lastSuccess: at, lastAttempt: at, records: d.events.length },
     gdrive: { label: 'Google Drive (demo)', status: 'ok', lastSuccess: at, lastAttempt: at, records: d.documents.length },
-    gtasks: { label: 'Google Tasks (demo)', status: 'failed', lastSuccess: new Date(Date.now() - 15 * 3600000).toISOString(), lastAttempt: at, records: 0, error: 'Demo: simulated outage to show how missing sources are flagged.' }
+    gtasks: { label: 'Google Tasks (demo)', status: 'failed', lastSuccess: new Date(Date.now() - 15 * 3600000).toISOString(), lastAttempt: at, records: 0, error: L('Demo: simulated outage to show how missing sources are flagged.', 'Demo: falla simulada para mostrar cómo se marcan las fuentes faltantes.') }
   };
   return { demo: true };
 }

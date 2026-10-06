@@ -1,5 +1,7 @@
 // Data layer (browser): everything is saved in this browser on this device (localStorage).
-const K = 'aios:';
+import { BRAND } from './brand.js';
+// Each brand keeps its data under its own key, so two brands never mix data — even on the same website.
+const K = BRAND.id + ':';
 function read(k, fallback) { try { const v = localStorage.getItem(K + k); return v ? JSON.parse(v) : fallback; } catch { return fallback; } }
 function write(k, v) {
   const s = JSON.stringify(v);

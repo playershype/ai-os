@@ -3,6 +3,7 @@ import { db, config } from './store.js';
 import { parseWhen, DAY } from './dates.js';
 import { aiEnabled, askJson, HONESTY } from './ai.js';
 import { DEMO_ME } from './demo.js';
+import { L, AI_LANG } from './i18n.js';
 
 export const settings = () => config.settings;
 export const myEmail = () => (db.meta.demo ? DEMO_ME : (config.google.email || '')).toLowerCase();
@@ -12,13 +13,13 @@ export const isExternal = (e) => !!e && !!myDomain() && !e.endsWith('@' + myDoma
 
 // ---------- user rules (explicit rules always override AI) ----------
 export const RULE_TYPES = {
-  important_sender: { label: 'Emails from … are always important', needs: 'email or @domain' },
-  important_project: { label: 'Anything involving project … is high priority', needs: 'project name' },
-  keyword_important: { label: 'Emails mentioning … are important', needs: 'word or phrase' },
-  ignore_sender: { label: 'Ignore email from …', needs: 'email or @domain' },
-  ignore_promotions: { label: 'Ignore promotional and bulk email', needs: '' },
-  due_within: { label: 'Anything due within … hours is urgent', needs: 'hours' },
-  amount_over: { label: 'Surface emails mentioning amounts over $…', needs: 'amount' }
+  important_sender: { label: L('Emails from … are always important', 'Los correos de … siempre son importantes'), needs: L('email or @domain', 'correo o @dominio') },
+  important_project: { label: L('Anything involving project … is high priority', 'Todo lo del proyecto … es prioridad alta'), needs: L('project name', 'nombre del proyecto') },
+  keyword_important: { label: L('Emails mentioning … are important', 'Los correos que mencionan … son importantes'), needs: L('word or phrase', 'palabra o frase') },
+  ignore_sender: { label: L('Ignore email from …', 'Ignorar correos de …'), needs: L('email or @domain', 'correo o @dominio') },
+  ignore_promotions: { label: L('Ignore promotional and bulk email', 'Ignorar correos promocionales y masivos'), needs: '' },
+  due_within: { label: L('Anything due within … hours is urgent', 'Todo lo que vence en menos de … horas es urgente'), needs: L('hours', 'horas') },
+  amount_over: { label: L('Surface emails mentioning amounts over $…', 'Destacar correos con montos mayores a $…'), needs: L('amount', 'monto') }
 };
 const rules = (type) => (settings().rules || []).filter((r) => r.on && r.type === type);
 const senderMatch = (email, v) => { v = String(v || '').toLowerCase().trim(); email = String(email || '').toLowerCase(); if (!v) return false; if (v.startsWith('@')) return email.endsWith(v); if (!v.includes('@')) return email.endsWith('@' + v); return email === v; };
@@ -85,10 +86,11 @@ export function threads() {
   for (const list of Object.values(map)) list.sort((a, b) => a.date.localeCompare(b.date));
   return map;
 }
-const REQUEST = /\?|\b(please|could you|can you|would you|let me know|need (you|your|a|an)|approve|review|confirm|thoughts|sign off|feedback)\b/i;
+// Requests, in English or Spanish ("¿…?", "por favor", "podrías", "me confirmas"…)
+const REQUEST = /\?|¿|(?<![\p{L}])(please|could you|can you|would you|let me know|need (you|your|a|an)|approve|review|confirm|thoughts|sign off|feedback|por favor|podrías|podrias|puedes|pueden|podría|podria|me confirmas|me confirmes|confirmar|confirma|revisa|revisar|revises|aprobar|apruebes|apruebas|necesito|necesitamos|avísame|avisame|me avisas|me envías|me envias|me mandas|me pasas|qué opinas|que opinas|comentarios|tu opinión|quedo atento|quedo atenta|quedamos atentos)(?![\p{L}])/iu;
 const NOISE_LABELS = ['CATEGORY_PROMOTIONS', 'CATEGORY_SOCIAL', 'CATEGORY_FORUMS'];
 export function deadlineIn(text, base) {
-  const m = String(text || '').match(/\b(by|before|due|deadline:?|until|no later than)\s+([^.,;?!\n]{2,40})/i);
+  const m = String(text || '').match(/(?<![\p{L}])(by|before|due|deadline:?|until|no later than|para el|para la|para|antes del|antes de|a más tardar|a mas tardar|hasta el|plazo:?|vence el|vence)\s+([^.,;?!¿¡\n]{2,40})/iu);
   if (!m) return null;
   const w = parseWhen(m[2], new Date(base), settings().morningMeans);
   return w.date ? { text: (m[1] + ' ' + m[2]).trim(), date: w.date.toISOString() } : null;
@@ -101,7 +103,7 @@ function rulesTriage(last, list) {
   if (last.isSent) {
     const to = last.to[0];
     if (age > 20 * 3600000 && age < 14 * DAY && to && !isMe(to.email) && REQUEST.test(last.body || last.snippet)) {
-      return { category: 'waiting_on', importance: isImportantPerson(to.email) ? 'high' : 'normal', summary: (last.body || last.snippet).slice(0, 140), action: `Waiting for ${to.name || to.email} to reply`, basis: 'rules' };
+      return { category: 'waiting_on', importance: isImportantPerson(to.email) ? 'high' : 'normal', summary: (last.body || last.snippet).slice(0, 140), action: L(`Waiting for ${to.name || to.email} to reply`, `Esperando respuesta de ${to.name || to.email}`), basis: 'rules' };
     }
     return null;
   }
@@ -118,13 +120,13 @@ function rulesTriage(last, list) {
 // Applies explicit user rules on top of AI or built-in triage.
 function applyRules(t, last) {
   const text = last.subject + ' ' + (last.body || last.snippet);
-  if (!last.isSent && (isIgnoredSender(last.from.email) || (rules('ignore_promotions').length && last.bulk && !isImportantPerson(last.from.email)))) return { ...t, category: 'noise', importance: 'low', ruleApplied: 'ignore' };
+  if (!last.isSent && (isIgnoredSender(last.from.email) || (rules('ignore_promotions').length && last.bulk && !isImportantPerson(last.from.email)))) return { ...t, category: 'noise', importance: 'low', ruleApplied: L('ignore', 'ignorar') };
   const person = last.isSent ? last.to[0]?.email : last.from.email;
   let r = { ...t };
-  if (isImportantPerson(person)) { r.importance = 'high'; if (r.category === 'fyi' || r.category === 'noise') r.category = 'important'; r.ruleApplied = 'important person'; }
-  if (last.project && isImportantProject(last.project) && r.category !== 'noise') { r.importance = 'high'; if (r.category === 'fyi') r.category = 'important'; r.ruleApplied = 'important project'; }
-  if (rules('keyword_important').some((k) => k.value && text.toLowerCase().includes(k.value.toLowerCase())) && r.category !== 'noise') { if (r.category === 'fyi') r.category = 'important'; r.ruleApplied = 'keyword'; }
-  if (amountOver(text) && r.category !== 'noise') { if (r.category === 'fyi') r.category = 'important'; r.importance = 'high'; r.ruleApplied = 'amount'; }
+  if (isImportantPerson(person)) { r.importance = 'high'; if (r.category === 'fyi' || r.category === 'noise') r.category = 'important'; r.ruleApplied = L('important person', 'persona importante'); }
+  if (last.project && isImportantProject(last.project) && r.category !== 'noise') { r.importance = 'high'; if (r.category === 'fyi') r.category = 'important'; r.ruleApplied = L('important project', 'proyecto importante'); }
+  if (rules('keyword_important').some((k) => k.value && text.toLowerCase().includes(k.value.toLowerCase())) && r.category !== 'noise') { if (r.category === 'fyi') r.category = 'important'; r.ruleApplied = L('keyword', 'palabra clave'); }
+  if (amountOver(text) && r.category !== 'noise') { if (r.category === 'fyi') r.category = 'important'; r.importance = 'high'; r.ruleApplied = L('amount', 'monto'); }
   return r;
 }
 
@@ -145,7 +147,7 @@ export async function triageEmail({ allowAi = true } = {}) {
       try {
         const out = await askJson({
           maxTokens: 4000,
-          system: `You triage email threads for a busy professional (${myEmail()}). ${HONESTY}`,
+          system: `You triage email threads (in any language) for a busy professional (${myEmail()}). ${HONESTY} ${AI_LANG()} The "deadline" field must stay exactly as written in the email.`,
           prompt: `Today is ${new Date().toDateString()}. Known projects: ${JSON.stringify(projects)}.
 For each thread (represented by its latest message), return:
 {"items":[{"id":"...","category":"needs_reply|waiting_on|important|fyi|noise","importance":"high|normal|low","summary":"<=25 words, factual","action":"what is being asked of the user, or null","deadline":"deadline wording exactly as stated in the text, or null","project":"one of the known project names or null"}]}
@@ -174,7 +176,7 @@ Threads:\n${JSON.stringify(batch.map(({ last, list }) => ({ id: last.id, latest_
     if (!last.isSent && t.category === 'waiting_on') t.category = 'needs_reply';
     if (!last.isSent && !last.inInbox && ['needs_reply', 'important'].includes(t.category)) { t.category = 'fyi'; t.action = null; t.archived = true; }
     if (t.project && !last.projectManual) last.project = t.project;
-    const dl = deadlineIn(t.deadlineText ? 'by ' + t.deadlineText.replace(/^(by|before|due)\s+/i, '') : (last.body || last.snippet), last.date);
+    const dl = deadlineIn(t.deadlineText ? 'by ' + t.deadlineText.replace(/^(by|before|due|para el|para|antes del|antes de)\s+/i, '') : (last.body || last.snippet), last.date);
     t.deadline = dl || (t.deadlineText ? { text: t.deadlineText, date: null } : null);
     last.triage = applyRules(t, last);
     counts[last.triage.category] = (counts[last.triage.category] || 0) + 1;
@@ -184,11 +186,12 @@ Threads:\n${JSON.stringify(batch.map(({ last, list }) => ({ id: last.id, latest_
 
 // ---------- commitments ----------
 const hash = (s) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return (h >>> 0).toString(36); };
-const PROMISE = /\b(i'll|i will|i'm going to|i am going to|let me (get|send|share|check|follow|look|review|put)|we'll|we will|i can get you|i'll get you)\b/i;
-const NOT_PROMISE = /\b(i'll be|we'll be|let me know|i will be|we will be|i'll see|i'll try)\b/i;
+// Promises, in English or Spanish ("te envío", "te lo mando", "vamos a enviar", "quedo en"…)
+const PROMISE = /(?<![\p{L}])(i'll|i will|i'm going to|i am going to|let me (get|send|share|check|follow|look|review|put)|we'll|we will|i can get you|i'll get you|te (lo |la |los |las )?(envío|envio|enviaré|enviare|enviamos|enviaremos|mando|mandamos|mandaré|mandare|paso|pasamos|pasaré|pasare|comparto|compartimos|compartiré|haré llegar|hare llegar|haremos llegar|confirmo|confirmamos|confirmaré|entrego|entregamos|entregaré)|(lo|la|los|las) (tendrás|tendras|tendrán|tendran) |enviaremos|mandaremos|entregaremos|entregaré|entregare|le (envío|envio|mando|paso|confirmo|enviaré)|les (envío|envio|mando|paso|confirmo|enviaré)|(lo|la|los|las) (envío|envio|enviaré|enviare|mando|reviso|revisaré|tendré|tendre)|enviaré|enviare|mandaré|mandare|revisaré|revisare|vamos a (enviar|mandar|entregar|pasar|tener|revisar|desplegar|implementar|publicar|compartir|confirmar|completar)|voy a (enviar|mandar|entregar|pasar|tener|revisar|preparar|desplegar|implementar|publicar|compartir|confirmar|completar)|quedo en|me comprometo a|nos comprometemos a)(?![\p{L}])/iu;
+const NOT_PROMISE = /(?<![\p{L}])(i'll be|we'll be|let me know|i will be|we will be|i'll see|i'll try|avísame|avisame|te aviso cualquier|voy a intentar|vamos a intentar|veré si|vere si)(?![\p{L}])/iu;
 const sentences = (t) => String(t || '').split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s.length > 8 && s.length < 300);
 function whatOf(s) {
-  let w = s.replace(/^(thanks[^.]*\.\s*|hi[^,]*,\s*|ok(ay)?[,.]\s*)/i, '').replace(/^.*?\b(i'll|i will|i'm going to|i am going to|we'll|we will|let me)\s+/i, '').replace(/[.!]+$/, '');
+  let w = s.replace(/^(thanks[^.]*\.\s*|gracias[^.]*\.\s*|hi[^,]*,\s*|hola[^,]*,\s*|ok(ay)?[,.]\s*|listo[,.]\s*)/i, '').replace(/^.*?(?<![\p{L}])(i'll|i will|i'm going to|i am going to|we'll|we will|let me|voy a|vamos a|quedo en|me comprometo a)\s+/iu, '').replace(/[.!]+$/, '');
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
 
@@ -197,13 +200,13 @@ function ruleCommitments(m) {
   const iOwe = m.isSent;
   for (const s of sentences(m.body || m.snippet)) {
     if (!PROMISE.test(s) || NOT_PROMISE.test(s)) continue;
-    if (!iOwe && /^\s*(let me)/i.test(s)) continue;
+    if (!iOwe && /^\s*(let me|déjame|dejame)/i.test(s)) continue;
     const person = iOwe ? m.to[0] : m.from;
     const w = parseWhen(s, new Date(m.date), settings().morningMeans);
     out.push({
       id: 'c_' + m.id + '_' + hash(s), direction: iOwe ? 'i_owe' : 'they_owe', person: { name: person?.name || person?.email, email: person?.email },
       what: whatOf(s), quote: s, promisedText: w.matched, promisedDate: w.date ? w.date.toISOString() : null,
-      confidence: w.date && /\b(i'll|i will|we'll|we will|i'm going to)\b/i.test(s) ? 'clear' : 'possible',
+      confidence: w.date ? 'clear' : 'possible',
       detectedAt: m.date, sourceType: 'email', sourceId: m.id, link: m.link, basis: 'rules', demo: m.source === 'demo' || undefined
     });
   }
@@ -226,13 +229,13 @@ export async function extractCommitments({ allowAi = true } = {}) {
       try {
         const out = await askJson({
           maxTokens: 4000,
-          system: `You extract commitments and decisions from email for ${myEmail()}. ${HONESTY}`,
+          system: `You extract commitments and decisions from email (in any language) for ${myEmail()}. ${HONESTY} ${AI_LANG()} The "quote" field must be copied exactly in the original language.`,
           prompt: `Find promises to deliver something, made in these messages.
 - direction "i_owe" when the message is FROM the user and the user promises something; "they_owe" when someone else promises something to the user.
 - "quote" must be copied EXACTLY from the text (one sentence). If you cannot quote it, do not include it.
 - "promised_date": YYYY-MM-DD only if the text states a time that can be resolved from the message date; else null. "promised_text": the time words as written, or null.
 - confidence "clear" only for explicit promises with a time; otherwise "possible".
-- Ignore pleasantries ("I'll be in touch", "let me know").
+- Ignore pleasantries ("I'll be in touch", "let me know", "quedo atento", "avísame").
 - Decisions: only explicit statements that something was decided/agreed.
 Return {"commitments":[{"message_id","direction","person_email","person_name","what","quote","promised_text","promised_date","confidence"}],"decisions":[{"message_id","decision","quote"}]}
 Messages:\n${JSON.stringify(batch.map((m) => ({ message_id: m.id, from_user: m.isSent, from: m.from, to: m.to.slice(0, 3), date: m.date, subject: m.subject, text: (m.body || m.snippet).slice(0, 1400) })))}`
@@ -266,11 +269,11 @@ Messages:\n${JSON.stringify(batch.map((m) => ({ message_id: m.id, from_user: m.i
 }
 
 export function commitmentState(c, now = new Date()) {
-  if (c.status === 'done') return { key: 'done', label: 'Done', level: 'ok' };
-  if (c.status === 'dismissed') return { key: 'dismissed', label: 'Dismissed', level: 'mute' };
-  if (!c.promisedDate) return { key: 'nodate', label: c.confidence === 'possible' ? 'Possible · no date' : 'Open · no date', level: c.confidence === 'possible' ? 'mute' : 'info' };
+  if (c.status === 'done') return { key: 'done', label: L('Done', 'Hecho'), level: 'ok' };
+  if (c.status === 'dismissed') return { key: 'dismissed', label: L('Dismissed', 'Descartado'), level: 'mute' };
+  if (!c.promisedDate) return { key: 'nodate', label: c.confidence === 'possible' ? L('Possible · no date', 'Posible · sin fecha') : L('Open · no date', 'Abierto · sin fecha'), level: c.confidence === 'possible' ? 'mute' : 'info' };
   const d = new Date(c.promisedDate);
-  if (d < now) { const days = Math.max(1, Math.round((now - d) / DAY)); return { key: 'overdue', label: `Overdue · ${days}d`, level: 'crit' }; }
-  if (d - now < DAY && d.getDate() === now.getDate()) return { key: 'today', label: 'Due today', level: 'warn' };
-  return { key: 'open', label: 'On track', level: 'ok' };
+  if (d < now) { const days = Math.max(1, Math.round((now - d) / DAY)); return { key: 'overdue', label: L(`Overdue · ${days}d`, `Vencido · ${days} d`), level: 'crit' }; }
+  if (d - now < DAY && d.getDate() === now.getDate()) return { key: 'today', label: L('Due today', 'Vence hoy'), level: 'warn' };
+  return { key: 'open', label: L('On track', 'A tiempo'), level: 'ok' };
 }

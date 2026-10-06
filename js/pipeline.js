@@ -8,6 +8,7 @@ import { isConnected, tokenValid } from './google.js';
 import { resolvePeople, linkProjects, triageEmail, extractCommitments } from './core.js';
 import { computePriorities, computeTimeline, computePulse, computeRisks, buildSnapshot, detectChanges, eventsOnDay, needsPrep, relatedToEvent } from './plan.js';
 import { generateBrief } from './assist.js';
+import { L, P } from './i18n.js';
 
 let current = null;
 export const runState = () => (current ? { running: true, type: current.run.type, stage: current.stage, startedAt: current.run.startedAt } : { running: false });
@@ -43,28 +44,28 @@ async function execute(run) {
     try { const r = await fn(); run.stages.push({ name, status: r?.status || 'ok', detail: r?.detail ?? String(r ?? ''), ms: Date.now() - t0 }); return r; }
     catch (e) { run.stages.push({ name, status: 'failed', detail: e.message, ms: Date.now() - t0 }); console.error(`[pipeline] ${name}:`, e); return null; }
   };
-  await stage('Connectors', async () => {
+  await stage(L('Connectors', 'Conectores'), async () => {
     if (db.meta.demo) { await syncDemo(); }
     else if (isConnected()) { await syncGoogle({ full: !live }); }
-    else return { status: 'skipped', detail: 'No accounts connected' };
+    else return { status: 'skipped', detail: L('No accounts connected', 'No hay cuentas conectadas') };
     const s = Object.values(db.sync); const ok = s.filter((x) => x.status === 'ok').length;
-    return { status: ok === s.length ? 'ok' : 'partial', detail: `${ok} of ${s.length} sources responded` + (ok < s.length ? ` · ${s.filter((x) => x.status !== 'ok').map((x) => x.label).join(', ')} kept from last sync` : '') };
+    return { status: ok === s.length ? 'ok' : 'partial', detail: L(`${ok} of ${s.length} sources responded`, `${ok} de ${s.length} fuentes respondieron`) + (ok < s.length ? ` · ${s.filter((x) => x.status !== 'ok').map((x) => x.label).join(', ')} ` + L('kept from last sync', 'se mantiene de la última sincronización') : '') };
   });
-  await stage('Normalize & deduplicate', () => { const n = dedupeTasks(); return { detail: `${Object.keys(db.messages).length} messages · ${Object.keys(db.events).length} events · ${Object.keys(db.tasks).length} tasks · ${n} duplicate${n === 1 ? '' : 's'} merged` }; });
-  await stage('Entity resolution', () => ({ detail: `${resolvePeople()} people` }));
-  await stage('Context graph', () => { linkProjects(); const n = [...Object.values(db.messages), ...Object.values(db.events), ...Object.values(db.tasks), ...Object.values(db.documents)].filter((x) => x.project).length; return { detail: `${n} items linked to ${Object.keys(db.projects).length} projects` }; });
-  await stage('Email triage', async () => { const r = await triageEmail({ allowAi: true }); return { status: r.aiError ? 'partial' : 'ok', detail: Object.entries(r.counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`).join(' · ') + (r.aiError ? ` · AI: ${r.aiError}` : r.aiCount ? ` · ${r.aiCount} by AI` : '') }; });
-  await stage('Commitment extraction', async () => { const r = await extractCommitments({ allowAi: true }); linkProjects(); return { status: r.aiError ? 'partial' : 'ok', detail: `${r.found} new · ${Object.values(db.commitments).filter((c) => c.status === 'open').length} open` + (r.aiError ? ` · AI: ${r.aiError}` : '') }; });
+  await stage(L('Normalize & deduplicate', 'Normalizar y quitar duplicados'), () => { const n = dedupeTasks(); return { detail: [P(Object.keys(db.messages).length, 'message', 'messages', 'mensaje', 'mensajes'), P(Object.keys(db.events).length, 'event', 'events', 'evento', 'eventos'), P(Object.keys(db.tasks).length, 'task', 'tasks', 'tarea', 'tareas'), P(n, 'duplicate merged', 'duplicates merged', 'duplicado unido', 'duplicados unidos')].join(' · ') }; });
+  await stage(L('Entity resolution', 'Identificar personas'), () => ({ detail: P(resolvePeople(), 'person', 'people', 'persona', 'personas') }));
+  await stage(L('Context graph', 'Mapa de relaciones'), () => { linkProjects(); const n = [...Object.values(db.messages), ...Object.values(db.events), ...Object.values(db.tasks), ...Object.values(db.documents)].filter((x) => x.project).length; return { detail: L(`${n} items linked to ${Object.keys(db.projects).length} projects`, `${n} elementos vinculados a ${Object.keys(db.projects).length} proyectos`) }; });
+  await stage(L('Email triage', 'Clasificar correo'), async () => { const r = await triageEmail({ allowAi: true }); return { status: r.aiError ? 'partial' : 'ok', detail: Object.entries(r.counts).map(([k, v]) => `${v} ${({ needs_reply: L('need reply', 'por responder'), waiting_on: L('waiting on', 'en espera'), important: L('important', 'importantes'), fyi: L('FYI', 'informativos'), noise: L('noise', 'ruido') })[k] || k}`).join(' · ') + (r.aiError ? ` · ${L('AI', 'IA')}: ${r.aiError}` : r.aiCount ? ` · ${r.aiCount} ${L('by AI', 'con IA')}` : '') }; });
+  await stage(L('Commitment extraction', 'Detectar compromisos'), async () => { const r = await extractCommitments({ allowAi: true }); linkProjects(); return { status: r.aiError ? 'partial' : 'ok', detail: L(`${r.found} new · ${Object.values(db.commitments).filter((c) => c.status === 'open').length} open`, `${r.found} nuevos · ${Object.values(db.commitments).filter((c) => c.status === 'open').length} abiertos`) + (r.aiError ? ` · ${L('AI', 'IA')}: ${r.aiError}` : '') }; });
 
   const now = new Date();
   const prev = previousSnapshot(dateKey(now));
   let changes = db.insights.changes || [];
-  if (!live) changes = (await stage('Change detection', () => { const c = detectChanges(prev, now); return { detail: `${c.length} meaningful changes vs ${prev ? prev.date : 'no previous snapshot'}`, changes: c }; }))?.changes || [];
-  const priorities = (await stage('Prioritization', () => { const p = computePriorities(now); return { detail: `${p.length} priorities`, p }; }))?.p || [];
+  if (!live) changes = (await stage(L('Change detection', 'Detectar cambios'), () => { const c = detectChanges(prev, now); return { detail: L(`${c.length} meaningful changes vs ${prev ? prev.date : 'no previous snapshot'}`, `${c.length} cambios importantes vs ${prev ? prev.date : 'sin foto anterior'}`), changes: c }; }))?.changes || [];
+  const priorities = (await stage(L('Prioritization', 'Priorizar'), () => { const p = computePriorities(now); return { detail: P(p.length, 'priority', 'priorities', 'prioridad', 'prioridades'), p }; }))?.p || [];
   const timeline = computeTimeline(now, priorities);
   const pulse = computePulse(now);
-  const risks = (await stage('Risk detection', () => { const r = computeRisks(now, pulse, timeline); return { detail: `${r.length} risks · ${timeline.issues.length} schedule issues`, r }; }))?.r || [];
-  await stage('Meeting preparation', () => { const m = eventsOnDay(now).filter((e) => new Date(e.start) > now && needsPrep(e)); for (const e of m) relatedToEvent(e, now); return { detail: `${m.length} meeting${m.length === 1 ? '' : 's'} ready for “Prep me”` }; });
+  const risks = (await stage(L('Risk detection', 'Detectar riesgos'), () => { const r = computeRisks(now, pulse, timeline); return { detail: P(r.length, 'risk', 'risks', 'riesgo', 'riesgos') + ' · ' + P(timeline.issues.length, 'schedule issue', 'schedule issues', 'problema de agenda', 'problemas de agenda'), r }; }))?.r || [];
+  await stage(L('Meeting preparation', 'Preparar reuniones'), () => { const m = eventsOnDay(now).filter((e) => new Date(e.start) > now && needsPrep(e)); for (const e of m) relatedToEvent(e, now); return { detail: L(`${P(m.length, 'meeting', 'meetings', '', '')} ready for “Prep me”`, `${P(m.length, '', '', 'reunión lista', 'reuniones listas')} para “Prepárame”`) }; });
 
   const prevBrief = db.insights.brief;
   Object.assign(db.insights, { priorities, timeline, pulse, risks, changes, computedAt: now.toISOString() });
@@ -73,13 +74,13 @@ async function execute(run) {
     const fresh = Object.values(db.messages).filter((m) => !m.isSent && new Date(m.date) > since && ['needs_reply', 'important'].includes(m.triage?.category));
     db.live = fresh.map((m) => ({ id: m.id, text: `${m.from.name}: ${m.subject}`, at: m.date, level: m.triage.importance === 'high' ? 'warn' : 'info' })).slice(-12);
   } else {
-    const brief = await stage('Morning brief', async () => { const b = await generateBrief({ now, priorities, timeline, pulse, risks, changes }); return { status: b.aiError ? 'partial' : 'ok', detail: `${b.items.length} insights · ${b.basis === 'ai' ? 'written by AI' : 'built-in rules'}${b.aiError ? ' · AI: ' + b.aiError : ''}`, b }; });
+    const brief = await stage(L('Morning brief', 'Resumen matutino'), async () => { const b = await generateBrief({ now, priorities, timeline, pulse, risks, changes }); return { status: b.aiError ? 'partial' : 'ok', detail: P(b.items.length, 'insight', 'insights', 'punto', 'puntos') + ' · ' + (b.basis === 'ai' ? L('written by AI', 'escrito por IA') : L('built-in rules', 'reglas integradas')) + (b.aiError ? ` · ${L('AI', 'IA')}: ` + b.aiError : ''), b }; });
     if (brief?.b) {
       db.insights.brief = brief.b;
       for (const p of priorities) if (brief.b.nextSteps?.[p.id]) { p.next = String(brief.b.nextSteps[p.id]).slice(0, 240); p.nextBasis = 'ai'; }
     }
     db.live = [];
-    await stage('Daily snapshot', () => { const s = buildSnapshot(now, priorities, pulse, risks); writeSnapshot(s); return { detail: `Saved ${s.date}` }; });
+    await stage(L('Daily snapshot', 'Foto del día'), () => { const s = buildSnapshot(now, priorities, pulse, risks); writeSnapshot(s); return { detail: L(`Saved ${s.date}`, `Guardada ${s.date}`) }; });
     if (run.type === 'morning' || !db.meta.lastBriefDate || db.meta.lastBriefDate !== dateKey(now)) { db.meta.lastBriefDate = dateKey(now); db.meta.briefReadyAt = now.toISOString(); }
   }
   run.status = run.stages.some((s) => s.status === 'failed') ? 'failed' : run.stages.some((s) => s.status === 'partial') ? 'partial' : 'ok';
