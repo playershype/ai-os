@@ -1,5 +1,8 @@
 // Integration layer (browser): Google sign-in by redirect (no server, no client secret) + read-only API calls.
 import { config, saveConfig } from './store.js';
+import { BRAND } from './brand.js';
+const SK = (k) => BRAND.id + '-' + k;
+import { L } from './i18n.js';
 
 export const SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
@@ -19,8 +22,8 @@ export const tokenValid = () => !!(config.google.token?.access_token && Date.now
 // Sends the browser to Google; Google sends it back with a 1-hour access token.
 export function startAuth(returnRoute = '#/today', { consent = false } = {}) {
   const state = crypto.getRandomValues(new Uint32Array(4)).join('-');
-  sessionStorage.setItem('aios-oauth-state', state);
-  sessionStorage.setItem('aios-return', returnRoute.startsWith('#') ? returnRoute : '#/today');
+  sessionStorage.setItem(SK('oauth-state'), state);
+  sessionStorage.setItem(SK('return'), returnRoute.startsWith('#') ? returnRoute : '#/today');
   const p = new URLSearchParams({ client_id: config.google.clientId, redirect_uri: redirectUri(), response_type: 'token', scope: SCOPES.join(' '), include_granted_scopes: 'true', state });
   if (config.google.email) p.set('login_hint', config.google.email);
   if (consent || !config.google.everConnected) p.set('prompt', 'consent');
@@ -32,12 +35,12 @@ export async function handleRedirect() {
   const h = location.hash.replace(/^#/, '');
   if (!/(^|&)(access_token|error)=/.test(h)) return null;
   const q = new URLSearchParams(h);
-  const back = sessionStorage.getItem('aios-return') || '#/today';
-  const expected = sessionStorage.getItem('aios-oauth-state');
-  sessionStorage.removeItem('aios-oauth-state');
+  const back = sessionStorage.getItem(SK('return')) || '#/today';
+  const expected = sessionStorage.getItem(SK('oauth-state'));
+  sessionStorage.removeItem(SK('oauth-state'));
   history.replaceState(null, '', redirectUri() + back);
-  if (q.get('error')) return { error: q.get('error') === 'access_denied' ? 'Google sign-in was cancelled.' : `Google: ${q.get('error')}` };
-  if (!expected || q.get('state') !== expected) return { error: 'Sign-in link expired — please try again.' };
+  if (q.get('error')) return { error: q.get('error') === 'access_denied' ? L('Google sign-in was cancelled.', 'Se canceló el inicio de sesión con Google.') : `Google: ${q.get('error')}` };
+  if (!expected || q.get('state') !== expected) return { error: L('Sign-in link expired — please try again.', 'El enlace de inicio de sesión venció — inténtalo de nuevo.') };
   const granted = (q.get('scope') || '').split(' ');
   const missing = SCOPES.filter((s) => !granted.includes(s));
   config.google.token = { access_token: q.get('access_token'), expires_at: Date.now() + (Number(q.get('expires_in') || 3600) - 60) * 1000 };
@@ -50,22 +53,22 @@ export async function handleRedirect() {
   config.google.everConnected = true;
   config.google.connectedAt ||= new Date().toISOString();
   saveConfig();
-  sessionStorage.removeItem('aios-auto-auth');
+  sessionStorage.removeItem(SK('auto-auth'));
   return { ok: true, missing };
 }
 
 export async function gget(url, params) {
   const full = params ? `${url}?${new URLSearchParams(params)}` : url;
   for (let attempt = 0; attempt < 3; attempt++) {
-    if (!tokenValid()) throw new ReconnectNeeded('Google session expired — tap “Refresh Google”.');
+    if (!tokenValid()) throw new ReconnectNeeded(L('Google session expired — tap “Refresh Google”.', 'La sesión de Google venció — toca “Renovar Google”.'));
     const res = await fetch(full, { headers: { Authorization: `Bearer ${config.google.token.access_token}` } });
-    if (res.status === 401) { delete config.google.token; saveConfig(); throw new ReconnectNeeded('Google session expired — tap “Refresh Google”.'); }
+    if (res.status === 401) { delete config.google.token; saveConfig(); throw new ReconnectNeeded(L('Google session expired — tap “Refresh Google”.', 'La sesión de Google venció — toca “Renovar Google”.')); }
     if ((res.status === 429 || res.status >= 500) && attempt < 2) { await new Promise((r) => setTimeout(r, 800 * (attempt + 1))); continue; }
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       const msg = body.error?.message || res.statusText;
-      if (res.status === 403 && /has not been used|is disabled/i.test(msg)) throw new Error(`This Google API is not enabled in your Google Cloud project. ${msg}`);
-      if (res.status === 403 && /insufficient/i.test(msg)) throw new ReconnectNeeded('Missing permission — reconnect Google and tick every box.');
+      if (res.status === 403 && /has not been used|is disabled/i.test(msg)) throw new Error(L('This Google API is not enabled in your Google Cloud project. ', 'Esta API de Google no está activada en tu proyecto de Google Cloud. ') + msg);
+      if (res.status === 403 && /insufficient/i.test(msg)) throw new ReconnectNeeded(L('Missing permission — reconnect Google and tick every box.', 'Falta un permiso — vuelve a conectar Google y marca todas las casillas.'));
       throw new Error(`Google API ${res.status}: ${msg}`);
     }
     return body;

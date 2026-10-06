@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cómo crear la versión de cada cliente</title>
+<style>
+:root{--bg:#0A0D14;--s1:#111622;--s2:#182030;--bd:rgba(255,255,255,.09);--tx:#E2E8F0;--mu:#A3B1C4;--pri:#38BDF8;--warn:#FBBF24;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#F4F6F9;--s1:#FFFFFF;--s2:#F1F4F8;--bd:rgba(15,23,42,.10);--tx:#0B1220;--mu:#475569;--pri:#0369A1;--warn:#B45309;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif}
+main{max-width:820px;margin:0 auto;padding:40px 18px 80px}
+h1{font-size:30px;line-height:1.2;margin:0 0 8px}
+h2{font-size:21px;margin:40px 0 8px;display:flex;gap:12px;align-items:center}
+h2 .n{display:inline-flex;width:32px;height:32px;border-radius:50%;background:var(--pri);color:var(--bg);font-size:15px;align-items:center;justify-content:center;flex:0 0 auto}
+.mu{color:var(--mu)} a{color:var(--pri)}
+ol,ul{padding-left:24px} li{margin:7px 0}
+code{font:15px ui-monospace,Consolas,monospace;background:var(--s2);border:1px solid var(--bd);padding:2px 6px;border-radius:4px;word-break:break-all}
+.box{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;margin:16px 0}
+.warn{border-color:var(--warn)} .tip{border-color:var(--pri)}
+table{border-collapse:collapse;width:100%;font-size:16px} td,th{border-top:1px solid var(--bd);padding:10px 8px;text-align:left;vertical-align:top}
+</style>
+</head>
+<body><main>
+<h1>Cómo crear la versión de cada cliente</h1>
+<p class="mu">Todas las versiones usan el mismo código. Lo único que cambia entre José y Luis es la <b>marca</b>: nombre, logo, colores, tipografía e ícono. Todo eso vive en un solo archivo, <code>marca.json</code>, más los íconos.</p>
+
+<h2><span class="n">1</span>Diseña la marca</h2>
+<ol>
+<li>Abre el <b>Creador de marca</b>: <code>https://TU-USUARIO.github.io/ai-os/marca.html</code> (o abre <code>marca.html</code> desde tu copia publicada).</li>
+<li>Escribe el <b>nombre de la app</b> y el <b>nombre corto</b> (el que sale debajo del ícono).</li>
+<li>Elige el <b>color principal</b>, la <b>tipografía</b>, el <b>idioma</b> (español o inglés) y el <b>formato de hora</b> (12 o 24 horas).</li>
+<li>Si el cliente tiene logo, toca <b>Elegir…</b> y súbelo (cuadrado se ve mejor). Si no, se usan sus iniciales.</li>
+<li>Mira la vista previa en modo oscuro, modo claro y el ícono. Si aparece un aviso amarillo, léelo: la app ajusta sola el tono para que el texto se lea bien.</li>
+<li>Toca <b>Descargar paquete de marca (.zip)</b>. Se descarga <code>marca-NOMBRE.zip</code>.</li>
+</ol>
+
+<h2><span class="n">2</span>Crea la copia del cliente</h2>
+<ol>
+<li>En GitHub, entra a <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a> y crea un repositorio nuevo con el nombre del cliente, por ejemplo <code>agenda-jose</code> (marca <b>Public</b>) → <b>Create repository</b>.</li>
+<li>Toca <b>uploading an existing file</b> y sube <b>todos los archivos de la app</b> (el contenido de la carpeta <code>ai-os-web</code>), igual que en la guía principal → <b>Commit changes</b>.</li>
+<li>Vuelve a tocar <b>Add file → Upload files</b>, descomprime el paquete de marca y sube esos archivos (<code>marca.json</code>, <code>manifest.webmanifest</code>, <code>icon-180.png</code>, <code>icon-192.png</code>, <code>icon-512.png</code> y <code>logo.png</code> si existe). GitHub reemplaza los que tienen el mismo nombre → <b>Commit changes</b>.</li>
+<li>Activa <b>Settings → Pages → main / root → Save</b>. La app del cliente queda en <code>https://TU-USUARIO.github.io/agenda-jose/</code>.</li>
+<li>Recomendado: borra <code>marca.html</code>, <code>MARCAS.html</code> y <code>js/marca-tool.js</code> de la copia del cliente (son herramientas tuyas, no suyas).</li>
+</ol>
+
+<h2><span class="n">3</span>Conecta Google para ese cliente</h2>
+<p>En la llave de Google (guía principal, paso 4d) agrega la dirección de la nueva copia en <b>Authorized redirect URIs</b>, por ejemplo <code>https://TU-USUARIO.github.io/agenda-jose/</code>. Una misma llave puede tener varias direcciones.</p>
+
+<h2>¿Por qué José no puede dañar a Luis?</h2>
+<ul>
+<li><b>Cada copia es independiente.</b> Cambiar el repositorio de José no toca el de Luis.</li>
+<li><b>Los datos usan un espacio lógico separado por marca.</b> Cada marca guarda su información con su propio identificador (el campo “Identificador interno”), por lo que la app no mezcla los datos de una marca con otra. <b>Esto no es una barrera de seguridad entre rutas del mismo dominio</b>: dos apps bajo <code>playershype.github.io</code> comparten el mismo origen del navegador. Para clientes reales, usa dominios o subdominios separados. <b>No cambies el identificador después de entregar la app</b>: la app dejaría de encontrar los datos guardados con el identificador anterior.</li>
+<li><b>Cada persona conecta su propio Google.</b> Sus datos sincronizados se guardan localmente en su navegador y el operador de la marca no recibe una copia. Si el usuario activa la IA opcional, el contenido necesario para esa función se envía directamente desde su navegador al proveedor de IA configurado.</li>
+</ul>
+
+<div class="box warn"><b>Para vender de verdad:</b> lo ideal es un dominio propio con un subdominio por cliente (<code>jose.tumarca.com</code>, <code>luis.tumarca.com</code>). GitHub Pages permite un dominio propio por repositorio en <b>Settings → Pages → Custom domain</b>. Así cada cliente queda totalmente aislado en el navegador y la dirección se ve profesional. Recuerda también la verificación de Google y la política de privacidad, que te expliqué antes.</div>
+
+<h2>Actualizar a todos tus clientes</h2>
+<p>Cuando mejores la app, sube los archivos nuevos a cada repositorio <b>excepto</b> <code>marca.json</code>, <code>manifest.webmanifest</code>, los íconos y <code>logo.png</code>. Así cada cliente recibe la mejora y conserva su marca y sus datos.</p>
+
+<table>
+<tr><th>Archivo</th><th>¿Cambia por cliente?</th></tr>
+<tr><td><code>marca.json</code>, <code>manifest.webmanifest</code>, <code>icon-*.png</code>, <code>logo.png</code></td><td><b>Sí</b> — la marca de cada cliente</td></tr>
+<tr><td>Todo lo demás (<code>index.html</code>, <code>app.js</code>, <code>app.css</code>, carpeta <code>js</code>…)</td><td>No — es el mismo producto para todos</td></tr>
+</table>
+</main></body></html>

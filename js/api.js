@@ -7,9 +7,11 @@ import { RULE_TYPES, commitmentState, myEmail, resolvePeople, triageEmail } from
 import { openTasks, eventsOnDay, computePriorities, computeTimeline, computePulse, computeRisks } from './plan.js';
 import { chat, prepMeeting, parseCapture, draftReply, weekly, weeklySummary, search, visibleTriage, describe } from './assist.js';
 import { runPipeline, runState, startScheduler, nextMorningRun, hasSources } from './pipeline.js';
+import { BRAND } from './brand.js';
+import { L, LOCALE } from './i18n.js';
 import { fmtTime, relDay, ago, timeZone, addDays, startOfDay, fmtDay } from './dates.js';
 
-export const VERSION = '1.1.0-web';
+export const VERSION = '1.2.0-web';
 
 // ---------- view model ----------
 function recompute() {
@@ -42,14 +44,14 @@ function stateView() {
   const upcoming = [];
   for (let i = 1; i <= 10; i++) {
     const d = addDays(startOfDay(now), i);
-    const label = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    const label = d.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric' });
     for (const e of eventsOnDay(d)) if (!e.allDay && e.attendees.some((a) => !a.self) && (e.attendees.length >= 3 || e.project)) upcoming.push({ date: label, title: e.title, ctx: fmtTime(e.start) + (projName(e.project) ? ' · ' + projName(e.project) : ''), t: e.start });
-    for (const t of openTasks()) if (t.due && startOfDay(t.due).getTime() === d.getTime()) upcoming.push({ date: label, title: t.title, ctx: 'deadline' + (projName(t.project) ? ' · ' + projName(t.project) : ''), t: t.due, deadline: true });
+    for (const t of openTasks()) if (t.due && startOfDay(t.due).getTime() === d.getTime()) upcoming.push({ date: label, title: t.title, ctx: L('deadline', 'plazo') + (projName(t.project) ? ' · ' + projName(t.project) : ''), t: t.due, deadline: true });
   }
   const last = db.runs[0];
   return {
     app: {
-      version: VERSION, demo: !!db.meta.demo, ai: aiEnabled(), model: config.anthropic.model || null, tz: timeZone(), me: myEmail(), storageKB: storageUsedKB(),
+      version: VERSION, brand: BRAND, demo: !!db.meta.demo, ai: aiEnabled(), model: config.anthropic.model || null, tz: timeZone(), me: myEmail(), storageKB: storageUsedKB(),
       google: { configured: G.isConfigured(), connected: G.isConnected(), tokenValid: G.tokenValid(), tokenExpires: config.google.token?.expires_at || null, email: config.google.email || null, redirectUri: G.redirectUri(), origin: G.jsOrigin(), clientId: config.google.clientId || '', scopes: config.google.grantedScopes || [], missingScopes: config.google.grantedScopes ? G.SCOPES.filter((s) => !config.google.grantedScopes.includes(s)) : [] },
       settings: config.settings, ruleTypes: RULE_TYPES, onboarded: !!config.onboarded, hasSources: hasSources(), usage
     },
@@ -59,7 +61,7 @@ function stateView() {
     inbox, commitments: { iOwe: commitments.filter((c) => c.direction === 'i_owe').sort(cs).map((c) => commitView(c, now)), theyOwe: commitments.filter((c) => c.direction === 'they_owe').sort(cs).map((c) => commitView(c, now)) },
     tasks, upcoming: upcoming.sort((a, b) => a.t.localeCompare(b.t)).slice(0, 12),
     sources: Object.entries(db.sync).map(([k, s]) => ({ key: k, ...s })), focus: db.focus && db.focus.active ? focusView(now) : null,
-    projects: Object.values(db.projects).map((p) => ({ id: p.id, name: p.name, keywords: p.keywords || [], people: p.people || [], important: !!p.important, owner: p.owner || 'You', demo: !!p.demo })),
+    projects: Object.values(db.projects).map((p) => ({ id: p.id, name: p.name, keywords: p.keywords || [], people: p.people || [], important: !!p.important, owner: p.owner && p.owner !== 'You' ? p.owner : L('You', 'Tú'), demo: !!p.demo })),
     chat: db.chat.slice(-8)
   };
 }
@@ -74,8 +76,8 @@ function focusView(now) {
     ...f, task: t ? { id: t.id, title: t.title, due: t.due ? relDay(t.due, now) + (t.dueHasTime ? ' ' + fmtTime(t.due) : '') : null, project: projName(proj), link: t.link } : null,
     minutesAvailable: until ? Math.round((until - now) / 60000) : null, untilLabel: until ? fmtTime(until) : null,
     nextMeeting: next ? { title: next.title, when: relDay(next.start, now) + ' ' + fmtTime(next.start), people: next.attendees.filter((a) => !a.self).length } : null,
-    documents: proj ? Object.values(db.documents).filter((d) => d.project === proj).sort((a, b) => b.modifiedTime.localeCompare(a.modifiedTime)).slice(0, 4).map((d) => ({ name: d.name, link: d.link, meta: `edited ${ago(d.modifiedTime, now)} ago by ${d.modifiedBy}` })) : [],
-    messages: proj ? Object.values(db.messages).filter((m) => m.project === proj && !m.bulk).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map((m) => ({ from: m.isSent ? 'You' : m.from.name, text: m.triage?.summary || m.snippet, when: ago(m.date, now), link: m.link })) : [],
+    documents: proj ? Object.values(db.documents).filter((d) => d.project === proj).sort((a, b) => b.modifiedTime.localeCompare(a.modifiedTime)).slice(0, 4).map((d) => ({ name: d.name, link: d.link, meta: L(`edited ${ago(d.modifiedTime, now)} ago by ${d.modifiedBy}`, `editado hace ${ago(d.modifiedTime, now)} por ${d.modifiedBy}`) })) : [],
+    messages: proj ? Object.values(db.messages).filter((m) => m.project === proj && !m.bulk).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map((m) => ({ from: m.isSent ? L('You', 'Tú') : m.from.name, text: m.triage?.summary || m.snippet, when: ago(m.date, now), link: m.link })) : [],
     held: held.filter((m) => m.triage.importance !== 'high').map((m) => ({ text: `${m.from.name} — ${m.subject}`, when: ago(m.date, now) })),
     breakthrough: held.filter((m) => m.triage.importance === 'high').map((m) => ({ id: m.id, text: `${m.from.name} — ${m.subject}`, when: ago(m.date, now) }))
   };
@@ -87,7 +89,7 @@ const on = (method, pattern, fn) => routes.push({ method, re: new RegExp('^' + p
 
 on('GET', '/api/state', () => stateView());
 on('POST', '/api/refresh', async (b) => {
-  if (!hasSources()) throw new Error('Connect Google (or load demo data) first.');
+  if (!hasSources()) throw new Error(L('Connect Google (or load demo data) first.', 'Primero conecta Google (o carga los datos de demo).'));
   if (!db.meta.demo && !G.tokenValid()) { G.startAuth(location.hash || '#/today'); return { redirecting: true }; }
   const p = runPipeline(b.type === 'live' ? 'live' : 'manual'); if (b.wait) await p; return { ok: true };
 });
@@ -105,20 +107,20 @@ on('POST', '/api/settings', async (b) => {
 });
 on('POST', '/api/config/google', (b) => {
   const id = String(b.clientId || '').trim();
-  if (!/^[\w-]+\.apps\.googleusercontent\.com$/.test(id)) throw new Error('That Client ID doesn’t look right — it should end with .apps.googleusercontent.com');
+  if (!/^[\w-]+\.apps\.googleusercontent\.com$/.test(id)) throw new Error(L('That Client ID doesn’t look right — it should end with .apps.googleusercontent.com', 'Ese Client ID no parece correcto — debe terminar en .apps.googleusercontent.com'));
   config.google.clientId = id; saveConfig(); return { ok: true };
 });
-on('POST', '/api/google/connect', (b) => { if (!G.isConfigured()) throw new Error('Save your Client ID first.'); G.startAuth(b.returnTo || location.hash || '#/today', { consent: !!b.consent }); return { redirecting: true }; });
+on('POST', '/api/google/connect', (b) => { if (!G.isConfigured()) throw new Error(L('Save your Client ID first.', 'Primero guarda tu Client ID.')); G.startAuth(b.returnTo || location.hash || '#/today', { consent: !!b.consent }); return { redirecting: true }; });
 on('POST', '/api/config/anthropic', async (b) => {
   const key = String(b.apiKey ?? '').trim();
   if (!key) { config.anthropic = {}; saveConfig(); return { ok: true, ai: false }; }
   config.anthropic.apiKey = key; config.anthropic.model = ''; saveConfig();
   try { return { ok: true, model: await pickModel(true) }; }
-  catch (e) { delete config.anthropic.apiKey; saveConfig(); throw new Error('Key not accepted: ' + e.message); }
+  catch (e) { delete config.anthropic.apiKey; saveConfig(); throw new Error(L('Key not accepted: ', 'Clave no aceptada: ') + e.message); }
 });
 on('POST', '/api/google/disconnect', () => { G.disconnect(); return { ok: true }; });
 on('POST', '/api/demo', async (b) => {
-  if (b.on) { if (G.isConnected()) throw new Error('Demo data is only available before a real account is connected.'); db.meta.demo = true; }
+  if (b.on) { if (G.isConnected()) throw new Error(L('Demo data is only available before a real account is connected.', 'Los datos de demo solo están disponibles antes de conectar una cuenta real.')); db.meta.demo = true; }
   else { clearDemo(); db.meta.demo = false; db.sync = {}; db.insights = {}; db.processed = { classify: {}, commit: {} }; db.meta.lastBriefDate = null; }
   saveDb(true);
   if (b.on) await runPipeline('manual');
@@ -127,7 +129,7 @@ on('POST', '/api/demo', async (b) => {
 on('POST', '/api/reset', () => { resetDb(); return { ok: true }; });
 
 on('POST', '/api/tasks', (b) => {
-  if (!String(b.title || '').trim()) throw new Error('A title is required.');
+  if (!String(b.title || '').trim()) throw new Error(L('A title is required.', 'Falta el título.'));
   let due = null;
   if (b.date) { due = new Date(b.date + 'T' + (b.time || '23:59') + ':00'); if (isNaN(due)) due = null; }
   const t = { id: uid('nt'), source: 'native', sourceId: null, title: String(b.title).trim().slice(0, 200), notes: String(b.notes || '').slice(0, 2000), kind: b.kind || 'task', person: b.person || null,
@@ -136,9 +138,9 @@ on('POST', '/api/tasks', (b) => {
   db.tasks[t.id] = t; db.insights.computedAt = null; saveDb(); return t;
 });
 on('PATCH', '/api/tasks/:id', (b, p) => {
-  const t = db.tasks[p.id]; if (!t) throw new Error('Task not found');
+  const t = db.tasks[p.id]; if (!t) throw new Error(L('Task not found', 'Tarea no encontrada'));
   const mine = t.source === 'native' || t.source === 'demo';
-  if (b.status && !mine && b.status !== t.status) throw new Error('This task lives in Google Tasks — complete it there (this app has read-only access).');
+  if (b.status && !mine && b.status !== t.status) throw new Error(L('This task lives in Google Tasks — complete it there (this app has read-only access).', 'Esta tarea está en Google Tasks — márcala ahí (esta app solo puede leer).'));
   if (b.status) { t.status = b.status; t.completedAt = b.status === 'done' ? new Date().toISOString() : null; }
   if (b.date !== undefined && mine) { const old = t.due; t.due = b.date ? new Date(b.date + 'T' + (b.time || '23:59') + ':00').toISOString() : null; t.dueHasTime = !!b.time; if (old && t.due && t.due > old) t.postponed = (t.postponed || 0) + 1; }
   if (b.priority) t.priority = b.priority;
@@ -147,29 +149,29 @@ on('PATCH', '/api/tasks/:id', (b, p) => {
 });
 on('POST', '/api/commitments', (b) => {
   const c = { id: uid('cm'), direction: b.direction === 'they_owe' ? 'they_owe' : 'i_owe', person: { name: b.person || 'Someone', email: b.email || '' }, what: String(b.what || '').slice(0, 200), quote: 'Added manually', promisedDate: b.date ? new Date(b.date + 'T23:59:00').toISOString() : null, promisedText: b.date || null, confidence: 'clear', detectedAt: new Date().toISOString(), sourceType: 'manual', sourceId: null, status: 'open', basis: 'manual', project: null };
-  if (!c.what) throw new Error('Describe the commitment.');
+  if (!c.what) throw new Error(L('Describe the commitment.', 'Describe el compromiso.'));
   db.commitments[c.id] = c; saveDb(); return c;
 });
 on('POST', '/api/commitments/:id', (b, p) => {
-  const c = db.commitments[p.id]; if (!c) throw new Error('Not found');
+  const c = db.commitments[p.id]; if (!c) throw new Error(L('Not found', 'No encontrado'));
   if (['open', 'done', 'dismissed'].includes(b.status)) { c.status = b.status; c.statusChangedAt = new Date().toISOString(); }
   db.insights.computedAt = null; saveDb(); return c;
 });
 on('POST', '/api/messages/:id/hide', (b, p) => {
-  const m = db.messages[p.id]; if (!m) throw new Error('Not found');
+  const m = db.messages[p.id]; if (!m) throw new Error(L('Not found', 'No encontrado'));
   db.hidden[m.threadId] = b.archive ? { archived: true, at: new Date().toISOString() } : { snoozeUntil: new Date(Date.now() + (Number(b.hours) || 24) * 3600000).toISOString() };
   db.insights.computedAt = null; saveDb(); return { ok: true };
 });
 on('POST', '/api/messages/:id/category', (b, p) => {
-  const m = db.messages[p.id]; if (!m?.triage) throw new Error('Not found');
+  const m = db.messages[p.id]; if (!m?.triage) throw new Error(L('Not found', 'No encontrado'));
   if (!['needs_reply', 'waiting_on', 'important', 'fyi', 'noise'].includes(b.category)) throw new Error('Bad category');
   m.triage.category = b.category; m.triage.ruleApplied = 'you'; db.processed.classify[m.id] = { ...(db.processed.classify[m.id] || m.triage), category: b.category, basis: 'you' };
   db.insights.computedAt = null; saveDb(); return { ok: true };
 });
 on('POST', '/api/messages/:id/draft', (b, p) => draftReply(p.id));
-on('GET', '/api/messages/:id/thread', (b, p) => { const m = db.messages[p.id]; if (!m) throw new Error('Not found'); return Object.values(db.messages).filter((x) => x.threadId === m.threadId).sort((a, c) => a.date.localeCompare(c.date)).map((x) => ({ from: x.isSent ? 'You' : x.from.name, date: fmtDay(x.date) + ' ' + fmtTime(x.date), text: x.body || x.snippet, subject: x.subject })); });
+on('GET', '/api/messages/:id/thread', (b, p) => { const m = db.messages[p.id]; if (!m) throw new Error(L('Not found', 'No encontrado')); return Object.values(db.messages).filter((x) => x.threadId === m.threadId).sort((a, c) => a.date.localeCompare(c.date)).map((x) => ({ from: x.isSent ? L('You', 'Tú') : x.from.name, date: fmtDay(x.date) + ' ' + fmtTime(x.date), text: x.body || x.snippet, subject: x.subject })); });
 on('POST', '/api/events/:id/prep', (b, p) => prepMeeting(p.id, { force: !!b.force }));
-on('POST', '/api/chat', (b) => { if (!String(b.q || '').trim()) throw new Error('Ask something.'); return chat(String(b.q).slice(0, 1000)); });
+on('POST', '/api/chat', (b) => { if (!String(b.q || '').trim()) throw new Error(L('Ask something.', 'Escribe una pregunta.')); return chat(String(b.q).slice(0, 1000)); });
 on('POST', '/api/chat/clear', () => { db.chat = []; saveDb(); return { ok: true }; });
 on('POST', '/api/capture/parse', (b) => parseCapture(String(b.text || '').slice(0, 500)));
 on('GET', '/api/search', (b, p, q) => search(q.get('q')));
@@ -181,7 +183,7 @@ on('POST', '/api/focus', (b) => {
   if (b.action === 'start') {
     let taskId = b.taskId;
     if (!taskId && b.title) { const t = { id: uid('nt'), source: 'native', title: String(b.title).slice(0, 200), status: 'open', priority: 'high', createdAt: new Date().toISOString(), due: null, dueHasTime: false, project: null }; db.tasks[t.id] = t; taskId = t.id; }
-    const t = db.tasks[taskId]; if (!t) throw new Error('Pick a task to focus on.');
+    const t = db.tasks[taskId]; if (!t) throw new Error(L('Pick a task to focus on.', 'Elige una tarea para enfocarte.'));
     db.focus = { active: true, taskId, startedAt: new Date().toISOString(), steps: t.steps || [] }; saveDb(); return { ok: true };
   }
   if (b.action === 'steps' && db.focus) { db.focus.steps = (b.steps || []).slice(0, 20).map((s) => ({ text: String(s.text).slice(0, 200), done: !!s.done })); const t = db.tasks[db.focus.taskId]; if (t) t.steps = db.focus.steps; saveDb(); return { ok: true }; }
@@ -189,7 +191,7 @@ on('POST', '/api/focus', (b) => {
 });
 on('POST', '/api/projects', (b) => {
   if (b.delete) { delete db.projects[b.id]; for (const k of ['messages', 'events', 'tasks', 'documents', 'commitments']) for (const x of Object.values(db[k])) if (x.project === b.id) x.project = null; saveDb(); return { ok: true }; }
-  const name = String(b.name || '').trim(); if (!name) throw new Error('Project needs a name.');
+  const name = String(b.name || '').trim(); if (!name) throw new Error(L('Project needs a name.', 'El proyecto necesita un nombre.'));
   const id = b.id && db.projects[b.id] ? b.id : uid('pr');
   db.projects[id] = { ...(db.projects[id] || {}), id, name, keywords: (b.keywords || []).map((k) => String(k).trim().toLowerCase()).filter(Boolean).slice(0, 20), people: (b.people || []).map((k) => String(k).trim().toLowerCase()).filter(Boolean).slice(0, 20), important: !!b.important, owner: b.owner || 'You' };
   saveDb(); return db.projects[id];
@@ -214,8 +216,8 @@ export async function api(path, opts = {}) {
 // Page start: finish Google sign-in if we're returning from it, then start the scheduler.
 export async function boot() {
   const res = await G.handleRedirect();
-  if (!res?.ok && G.isConfigured() && G.isConnected() && !G.tokenValid() && config.settings.autoGoogle && navigator.onLine && !sessionStorage.getItem('aios-auto-auth') && !res?.error) {
-    sessionStorage.setItem('aios-auto-auth', '1'); // only once per visit — never loops
+  if (!res?.ok && G.isConfigured() && G.isConnected() && !G.tokenValid() && config.settings.autoGoogle && navigator.onLine && !sessionStorage.getItem(BRAND.id + '-auto-auth') && !res?.error) {
+    sessionStorage.setItem(BRAND.id + '-auto-auth', '1'); // only once per visit — never loops
     G.startAuth(location.hash || '#/today');
     return { redirecting: true };
   }

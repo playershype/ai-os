@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta name="robots" content="noindex">
+<title>Creador de marca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+.tool { max-width: 1240px; margin: 0 auto; padding: 28px 20px 64px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.form { flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.preview { flex: 999 1 520px; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.f { display: flex; flex-direction: column; gap: 6px; }
+.f label, .f .lbl { font-size: 13px; color: var(--mu); }
+.colorrow { display: flex; gap: 8px; align-items: center; }
+.colorrow input[type=color] { width: 48px; height: 40px; padding: 2px; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg); cursor: pointer; }
+.pv { border-radius: 12px; border: 1px solid var(--bd2); overflow: hidden; background: var(--bg); color: var(--tx); }
+.pv-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--s1); border-bottom: 1px solid var(--bd); }
+.pv-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.icons { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.icons canvas { border-radius: 22%; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+.note { font-size: 13px; padding: 10px 12px; border-radius: 6px; background: var(--warn-t); color: var(--warn); }
+.drop { border: 1px dashed var(--bd2); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; }
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap topbar-in" style="max-width:1240px">
+  <span class="row"><span id="hdr-logo"></span><span><b style="font-size:15px">Creador de marca</b><span class="mono faint small" style="display:block">una versión por cliente · mismo producto</span></span></span>
+  <span class="grow"></span>
+  <a class="btn" href="./">Abrir la app</a>
+</div></header>
+
+<main class="tool">
+  <section class="form card pad" aria-labelledby="f-h">
+    <h1 id="f-h" class="h2">Datos de la marca</h1>
+    <p class="small faint" style="margin:-8px 0 0">Todo se ve en vivo a la derecha. Al final descarga el paquete y súbelo al repositorio de ese cliente.</p>
+    <div class="f"><label for="nombre">Nombre de la app</label><input id="nombre" class="input" maxlength="60" placeholder="Ej. Agenda Pro de José"></div>
+    <div class="f"><label for="nombreCorto">Nombre corto (debajo del ícono, máx. 14)</label><input id="nombreCorto" class="input" maxlength="14" placeholder="Ej. Agenda Pro"></div>
+    <div class="f"><label for="eslogan">Eslogan (opcional)</label><input id="eslogan" class="input" maxlength="80"></div>
+    <div class="f"><span class="lbl">Color principal</span><div class="colorrow"><input type="color" id="principal-pick" aria-label="Elegir color principal"><input id="principal" class="input mono" style="width:120px" maxlength="7"></div></div>
+    <div class="f"><label for="tipografia">Tipografía</label><select id="tipografia" class="input"></select></div>
+    <div class="f"><label for="idioma">Idioma de la app</label><select id="idioma" class="input"><option value="es">Español</option><option value="en">English</option></select></div>
+    <div class="f"><label for="formatoHora">Formato de hora</label><select id="formatoHora" class="input"><option value="12h">12 horas (3:00 p. m.)</option><option value="24h">24 horas (15:00)</option></select></div>
+    <div class="f"><span class="lbl">Logo (opcional — PNG, JPG o SVG cuadrado)</span>
+      <div class="drop"><span id="logo-prev"></span><span class="grow small faint" id="logo-name">Sin logo: se usan las iniciales.</span><label class="btn btn-sm" for="logo-file">Elegir…</label><input id="logo-file" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="sr"><button class="btn btn-g btn-sm" id="logo-clear" type="button">Quitar</button></div></div>
+    <div class="f"><label for="iniciales">Iniciales (si no hay logo)</label><input id="iniciales" class="input" maxlength="3" style="width:100px"></div>
+    <details><summary class="small muted" style="cursor:pointer">Opciones avanzadas</summary>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px">
+        <div class="f"><span class="lbl">Fondo modo oscuro</span><div class="colorrow"><input type="color" id="fondoOscuro-pick" aria-label="Fondo oscuro"><input id="fondoOscuro" class="input mono" style="width:120px" maxlength="7"></div></div>
+        <div class="f"><span class="lbl">Fondo modo claro</span><div class="colorrow"><input type="color" id="fondoClaro-pick" aria-label="Fondo claro"><input id="fondoClaro" class="input mono" style="width:120px" maxlength="7"></div></div>
+        <div class="f"><label for="temaInicial">Tema al abrir</label><select id="temaInicial" class="input"><option value="auto">Según el teléfono</option><option value="dark">Oscuro</option><option value="light">Claro</option></select></div>
+        <div class="f"><label for="soporte">Correo de soporte (opcional)</label><input id="soporte" class="input" type="email"></div>
+        <div class="f"><label for="id">Identificador interno</label><input id="id" class="input mono" maxlength="30" placeholder="se crea del nombre"><span class="small faint">Separa los datos de cada marca. No lo cambies después de entregar la app.</span></div>
+      </div></details>
+    <div id="notes" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button class="btn btn-p" id="download" type="button" style="min-height:44px">Descargar paquete de marca (.zip)</button>
+    <button class="btn btn-g" id="reset" type="button">Volver a la marca actual</button>
+    <div class="small faint">El paquete trae: <code>marca.json</code>, <code>manifest.webmanifest</code>, los íconos <code>icon-180/192/512.png</code> y el logo. Súbelos al repositorio del cliente (Add file → Upload files) reemplazando los existentes.</div>
+  </section>
+
+  <section class="preview" aria-label="Vista previa">
+    <div class="pv" id="pv-dark"></div>
+    <div class="pv" id="pv-light"></div>
+    <div class="card pad" style="grid-column:1/-1"><div class="eyebrow" style="margin-bottom:12px">Ícono en la pantalla de inicio</div><div class="icons" id="icons"></div></div>
+  </section>
+</main>
+<script type="module" src="js/marca-tool.js"></script>
+</body>
+</html>
