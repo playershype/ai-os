@@ -11,7 +11,7 @@ import { BRAND } from './brand.js';
 import { L, LOCALE } from './i18n.js';
 import { fmtTime, relDay, ago, timeZone, addDays, startOfDay, fmtDay } from './dates.js';
 
-export const VERSION = '1.2.0-web';
+export const VERSION = '1.1.0-web';
 
 // ---------- view model ----------
 function recompute() {
